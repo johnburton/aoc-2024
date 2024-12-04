@@ -55,6 +55,35 @@ int count_xmas(const std::vector<std::string> &grid, int x, int y)
     return count;
 }
 
+bool check_xmas(const std::vector<std::string> &grid, int x, int y)
+{
+    // Too close to edge
+    if (x < 1 || y < 1 || x >= grid[0].size() - 1 || y >= grid.size() - 1)
+    {
+        return false;
+    }
+
+    // If the centre isn't A it can't be right
+    if (grid[y][x] != 'A')
+    {
+        return false;
+    }
+
+    char p1 = grid[y - 1][x - 1];  // Top left
+    char p2 = grid[y + 1][x - 1];  // Bottom left
+    char p3 = grid[y - 1][x + 1];  // Top right
+    char p4 = grid[y + 1][x + 1];  // Bottom right
+
+    bool diag_1 = false;
+    bool diag_2 = false;
+
+    if ((p1 == 'M' && p4 == 'S') || (p1 == 'S' && p4 == 'M')) diag_1 = true;
+    if ((p2 == 'M' && p3 == 'S') || (p2 == 'S' && p3 == 'M')) diag_2 = true;
+
+    return diag_1 && diag_2;
+}
+
+
 int part1()
 {
     auto input = read_input("../day4.txt");
@@ -69,7 +98,22 @@ int part1()
     return count;
 }
 
+int part2()
+{
+    auto input = read_input("../day4.txt");
+    int count = 0;
+    for (int i = 0; i < input.size(); i++)
+    {
+        for (int j = 0; j < input[i].size(); j++)
+        {
+            count += check_xmas(input, i, j);
+        }
+    }
+    return count;
+}
+
 int main()
 {
     std::cout << part1() << std::endl;
+    std::cout << part2() << std::endl;
 }
