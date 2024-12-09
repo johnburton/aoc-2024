@@ -60,6 +60,7 @@ auto get_max_file_id(std::vector<int>& input_data) -> int
     return *std::max_element(input_data.begin(), input_data.end());
 }
 
+
 auto compress_2(std::vector<int>& input_data)
 {
     auto max_file_id = get_max_file_id(input_data);
@@ -67,28 +68,47 @@ auto compress_2(std::vector<int>& input_data)
     for (int file_id = max_file_id; file_id >= 0; file_id -= 1)
     {
         auto file_start = std::find(input_data.begin(), input_data.end(), file_id);
-        auto file_end   = std::find(file_start, input_data.end(), file_id + 1);
+        auto file_end   = std::find_if(file_start, input_data.end(), [file_id](int x) { return x != file_id; });
 
         auto file_size = std::distance(file_start, file_end);
 
-        for (int i = 0; i < file_size; i += 1)
+        // Find the leftmost free space that is large enough to fit the size of the file
+        auto free_start = std::find(input_data.begin(), input_data.end(), -1);
+        auto free_end  = std::find_if(free_start, input_data.end(), [file_size](int x) { return x != -1; });
+        auto free_size = std::distance(free_start, free_end);
+
+        while (free_size < file_size)
         {
-            auto free_start = std::find(input_data.begin(), input_data.end(), -1);
-            auto free_end   = std::find(free_start, input_data.end(), 0);
-
-            auto free_size = std::distance(free_start, free_end);
-
-            if (free_size >= file_size)
+            free_start = std::find(free_end, input_data.end(), -1);
+            if (free_start == input_data.end())
             {
-                std::fill(file_start, file_end, -1);
-                std::fill(free_start, free_start + file_size, file_id);
                 break;
             }
+            free_end  = std::find_if(free_start, input_data.end(), [file_size](int x) { return x != -1; });
+            free_size = std::distance(free_start, free_end);
+        }
+
+
+        // If none found, we are done
+        if (free_start == input_data.end())
+        {
+            continue;
+        }
+
+        if (free_start > file_start)
+        {
+            continue;;
+        }
+
+        // Otherwise swap the file with the free space
+        for (int i = 0; i < file_size; i += 1)
+        {
+            std::swap(*free_start, *file_start);
+            free_start++;
+            file_start++;
         }
     }
-
 }
-
 
 auto compress_1(std::vector<int>& input_data)
 {
@@ -115,13 +135,6 @@ auto compress_1(std::vector<int>& input_data)
     }
 }
 
-auto part2() -> void
-{
-    auto input_line = get_input_line();
-    auto input_data = expand(input_line);
-    compress_2(input_data);
-}
-
 unsigned long long checksum(std::vector<int>& input_data)
 {
     auto checksum = 0ull;
@@ -142,27 +155,20 @@ auto part1() -> void
     auto input_line = get_input_line();
     auto input_data = expand(input_line);
     compress_1(input_data);
-
-    // Print input_data
-    for (int i = 0; i < input_data.size(); i += 1)
-    {
-        if (input_data[i] == -1)
-        {
-            std::cout << ".";
-        }
-        else
-        {
-            std::cout << input_data[i];
-        }
-    
-    }
-    std::cout << "\n";
-
     std::cout << "Checksum for part 1 is " << checksum(input_data) << "\n";
+}
+
+auto part2() -> void
+{
+    auto input_line = get_input_line();
+    auto input_data = expand(input_line);
+    compress_2(input_data);
+    std::cout << "Checksum for part 2 is " << checksum(input_data) << "\n";
 }
 
 
 int main()
 {
     part1();
+    part2();
 }
